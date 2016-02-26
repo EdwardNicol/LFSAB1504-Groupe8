@@ -1,0 +1,18 @@
+function [] = NewtonRaphson()
+
+global data
+
+delta = 1;
+n=1;
+while (norm(delta) > 10e-9)
+    
+    [data.h,data.J] = QuickRManuel_cons_hJ(data);
+    delta = data.J(:,data.qv)\data.h';
+    data.q(data.qv) = data.q(data.qv) - delta';
+    n=n+1;
+    norm(delta)
+    %disp(['Estimated error ' num2str(norm(delta))]);
+    disp(['at ' num2str(n) 'iteration']);
+    
+end
+
