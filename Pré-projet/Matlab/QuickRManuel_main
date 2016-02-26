@@ -1,12 +1,153 @@
-function [t,x] = QuickRManuel_main(data)
+
 %Integration des equations du mouvement par ode45
+%clear all
+global data
+
+%/!\ Pas d accent dans les codes MATLAB : ca fait bug LaTeX !
+%Il ne faut pas executer ce script mais copy paste son contenu dans la
+%Command Window afin de creer la structure data. Sinon sa lance une
+%erreure.. Il y a pe moyen de faire autrement mais ca fait seulement 1h que
+%je bosse avec les structures et je n ai encore rien trouve
+
+
+%% caracteristiques du corps 1:
+%S1 = sym('S1');
+data.m1 = 16; % masse du corps 1
+data.S1 = 0; % Force de coupe exterieure en E selon I1 (initialisee a 0)
+%data.E = data.q(1); %Position de reference de E par rapport a O
+
+%% caracteristiques du corps 2:
+data.L2 = 0.53; %longueur du bras
+data.m2 = 4.5; %masse du bras
+data.I2 = 0.11; %inertie du bras
+
+%% caracteristiques du corps 3:
+data.m3 = 1.5; %masse de la glissiere
+data.I3 = 0.001; %inertie de la glissiere
+
+%% caracteristiques du corps 4:
+%Position de reference A = a1*I1 + a2*I2
+    data.a1 = 0.1; 
+    data.a2 = 0.25;
+data.L4 = 0.1; %longueur de l actionneur
+data.m4 = 1; %masse de l'actionneur
+data.I4 = 10; %inertie de l actionneur
+%T4 = sym('T4');
+data.T4 = 0; %Couple moteur applique en A sur l actionneur  (initialisee a 0)
+
+%% caracteristiques du corps 5:
+data.b2 = 0.45; %position de reference B = b2*I2
+data.L5 = 0.1; %longueur de la bielle
+data.m5 = 2; %masse de la bielle
+data.I5 = 0.0015; %inertie de la bielle
+
+%Vecteur des positions generalisee
+x1 = sym('x1');
+theta1 = sym('theta1');
+x2 = sym('x2');
+theta2 = sym('theta2');
+theta3 = sym('theta3');
+
+%data.q = [x1 ;theta1 ;x2 ;theta2 ;theta3];
+       %Etapes de calcul pour trouver theta1
+        x2a=data.a2/sin(theta1);
+        x1a=data.L4+data.a1-x2a*cos(theta1);
+        theta3a = acos((x1a+data.L2*cos(theta1))/data.L5);
+       %On trouve alors thetaI (parait qu il faut ajouter 4pi afin d'avoir
+       %un theta1 positif
+        theta1I = solve(-data.L5*sin(theta3a)-data.b2+data.L2*sin(theta1)==0);
+
+        x2I = solve(x2==data.a2/sin(theta1I));
+        x1I=solve(x1==data.L4+data.a1-x2I*cos(theta1I));
+        theta3I = solve(theta3==acos((x1I+data.L2*cos(theta1I))/data.L5));
+       %Pour finir on met tout dans un beau vecteur
+        CI(1) = x1I;
+        CI(2) = theta1I+4*pi;
+        CI(3) = x2I;
+        CI(4) = 0;
+        CI(5) = theta3I;
+
+        data.q = CI;
+
+%Vecteur des vitesses generalisees
+% x1d = sym('x1d');
+% theta1d = sym('theta1d');
+% x2d = sym('x2d');
+% theta2d = sym('theta2d');
+% theta3d = sym('theta3d');
+% 
+% data.qd = [x1d ;theta1d ;x2d ;theta2d ;theta3d];
+
+data.qd = zeros(5,1);
+
+%Vecteur des accelerations generalisees
+% x1dd = sym('x1dd');
+% theta1dd = sym('theta1dd');
+% x2dd = sym('x2dd');
+% theta2dd = sym('theta2dd');
+% theta3dd = sym('theta3dd');
+% 
+% data.qdd = [x1dd ;theta1dd ;x2dd ;theta2dd ;theta3dd];
+
+data.qdd = zeros(6,1);
+
+%Vecteur des indices des variables independantes
+data.qu = 4;
+
+%Vecteur des indices des variables dependantes
+data.qv = [1 2 3 5]';
+
+% Matrice de masse 'M' et Vecteur dynamique 'c'
+data.M = zeros(5);
+data.c = zeros(5,1);
+
+%Vecteur des forces/couples articulaires
+data.Q = zeros(5,1);
+
+% Matrice jacobienne 'J' et Vecteur contrainte 'h'
+data.J = zeros(4,5);
+data.h = zeros(4,1);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% MAIN.m %%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %Conditions initiales : 
 %                           u(0) = 0 rad
 %                           ud(0) = pi rad/s
 %                           Tspan = [0 20]
 %
-[t,x]=ode45(@QuickRManuel_mvtequ,[0,20],[0 pi]);
 
-end
+
+y0  = [0 0]';
+tspan = [0,20];
+options = odeset('AbsTol',1e-9,'MaxStep',1e-2);
+[t,u] = ode45(@QuickRManuel_mvtequ,tspan,y0,options);
+
+disp(['J ai fini ode45 !!'])
+
+%Newton Raphson
+    % Conditions initiales
+    v = zeros(4,length(u));
+    vd = zeros(4,length(u));
+    length(u)
+    % Boucle pour v et vd
+        for i = 1:length(u)
+    
+             data.q(data.qu) = u(i,1:2)';
+             NewtonRaphson();
+             
+             v(i,1:4) = data.q(data.qv);
+             Jv = data.J(:,data.qv);
+             Ju = data.J(:,data.qu);
+             Bvu = -Jv\Ju;
+             vd(i,1:4) = Bvu*u(i,2)';
+               
+        end
+
+        
+ %PLOTS
+ 
 
