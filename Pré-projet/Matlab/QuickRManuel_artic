@@ -1,4 +1,4 @@
-unction [Q] = QuickRManuel_artic(data)
+function [Q] = QuickRManuel_artic(data)
 %Renvoie le vecteur des forces articulaires (forces dans les verins). 
 
 x1d = data.qd(1);
