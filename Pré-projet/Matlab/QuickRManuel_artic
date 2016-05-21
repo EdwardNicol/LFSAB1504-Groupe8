@@ -1,13 +1,12 @@
 function [Q] = QuickRManuel_artic(data)
 %Renvoie le vecteur des forces articulaires (forces dans les verins). 
-[CIV] = QuickRManuel_initalcondvit(data);
-x1d = CIV(1);
+
+x1d = data.qd(1);
 %Variables utiles (redefinies par le point 4 de l enonce)
-S1 = -120*(tanh(10*(x1d-0.1472))+0.9);
-T4 = 17;
+data.S1 = -120*(tanh(10*(x1d-0.1472))+0.9);
+data.T4 = 17;
 
 %Vecteur Q :
-Q = [S1;0;0;T4;0];
+Q = [data.S1;0;0;data.T4;0];
 
 end
-

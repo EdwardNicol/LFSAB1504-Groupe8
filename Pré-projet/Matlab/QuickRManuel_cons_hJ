@@ -10,18 +10,18 @@ a2 = data.a2;
 b2 = data.b2;
 
 %NUM
-[q] = QuickRManuel_initalcond(data)
-x1 = q(1);
-x2 = q(3);
-theta1 = q(2);
-theta2 = q(4);
-theta3 = q(5);
+x1 = data.q(1);
+x2 = data.q(3);
+theta1 = data.q(2);
+theta2 = data.q(4);
+theta3 = data.q(5);
 %SYM
-% x1 = data.q(1);
-% x2 = data.q(3);
-% theta1 = data.q(2);
-% theta2 = data.q(4);
-% theta3 = data.q(5);
+% x1 = sym('x1');
+% theta1 = sym('theta1');
+% x2 = sym('x2');
+% theta2 = sym('theta2');
+% theta3 = sym('theta3');
+
 %Contraintes entre les coordonnees generalisee :
 
 h(1) = -L4*cos(theta2) - a1 + x1 + x2*cos(theta1);
